@@ -77,6 +77,19 @@ def play():
         secret = random.choice(WORDS)
         history = []
 
+        clear()
+        print("=" * 32)
+        print("WORDLE: ENGINE ACCESS CODE")
+        print("=" * 32)
+        print("Guess the hidden 6-letter word in 6 attempts.")
+        print("After each guess, letters show how close you are:")
+        print("[GREEN] correct letter and position")
+        print("[YELLOW] correct letter, wrong position")
+        print("[GRAY] letter is not in the word")
+        print("A successful solve earns the code and a bonus hint.")
+        print("If you run out of guesses, the code is revealed.")
+        input("\nPress Enter to start Wordle...")
+
         while len(history) < MAX_ATTEMPTS:
 
                 clear()
@@ -118,7 +131,9 @@ def play():
         print("💀 GAME OVER")
         print(f"The word was: {secret.upper()}")
         print(f"{RESET}")
-        print("You failed the challenge. \nEmergency Recovery Protocol.\nCHEST CODE 1: B@D!")
+        print("You failed the challenge.")
+        print("Emergency Recovery Protocol.")
+        print("CHEST CODE 1: B@D!")
         print("Penalty: No bonus hint for you!")
         return False
 
