@@ -1,44 +1,45 @@
-def reactor_puzzle():
+def reactor_puzzle(wordle_win=None):
+    import os
+    import shutil
+
+    def clear_screen():
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+    def check_terminal_size():
+        width, height = shutil.get_terminal_size()
+        return width >= 80 and height >= 24
+
+    clear_screen()
+
+    # Initial title / log intro printed once at startup
     print(
         "\033[91m"
         "==================================================\n"
         "WARNING: REACTOR CORE UNSTABLE\n"
-        "=================================================="
+        "==================================================\n"
         "\033[0m\n"
-
-        "\033[93m"
-        "Chief Engineer's Log"
-        "\033[0m\n\n"
-
+        "\033[93mChief Engineer's Log\033[0m\n\n"
         "The thermal and electric subsystems are interacting\n"
         "in unexpected ways.\n\n"
-
         "Stabilise all 25 nodes within 35 moves or the station\n"
         "will be lost.\n\n"
-
-        "\033[96m"
-        "REACTOR STABILISATION PROTOCOL"
-        "\033[0m\n\n"
-
-        "Enter coordinates A1-E5\n"
-        "Type HINT for engineering assistance\n"
-        "Type QUIT to abort mission\n\n"
-
-        "\033[92m"
-        "T = Thermal Node\n"
-        "E = Electric Node"
-        "\033[0m\n\n"
-
-        "\033[95m"
-        "Thermal overload:"
-        "\033[0m "
-        "Vertically and horizontally neighbouring cells\n\n"
-
-        "\033[94m"
-        "Electric overload:"
-        "\033[0m "
-        "Diagonally neighbouring cells\n"
+        "\033[96mREACTOR STABILISATION PROTOCOL\033[0m\n\n"
+        "Enter coordinates A1-E5 | HINT | QUIT\n"
+        "\033[92mT = Thermal (Orthogonal) | E = Electric (Diagonal)\033[0m\n"
     )
+
+    if wordle_win is not None:
+        if wordle_win:
+            print("Previous game: Wordle WON.")
+            print("Bonus hint earned. Wordle chest code: B@D!")
+        else:
+            print("Previous game: Wordle NOT WON.")
+            print("Recovery code revealed: B@D!. Bonus hint was lost.")
+
+    if not check_terminal_size():
+        print("Note: Terminal is smaller than the recommended 80x24.")
+
+    input("Press Enter to begin stabilisation protocol...")
 
     reactor = [
         [{"energy":4,"type":"T"},{"energy":7,"type":"E"},{"energy":3,"type":"T"},{"energy":5,"type":"E"},{"energy":4,"type":"T"}],
@@ -51,245 +52,149 @@ def reactor_puzzle():
     row_letters = ["A", "B", "C", "D", "E"]
     cipher = "Alphabet"
     count = 0
+    status_message = "Awaiting input."
 
-    def print_grid():
-        print("\n     1   2   3   4   5")
+    def print_grid(status_message=""):
+        clear_screen()
+        stable_nodes = sum(1 for row in reactor for node in row if 1 <= node["energy"] <= 5)
+
+        print("\033[91m==================================================\033[0m")
+        print(f" REACTOR CORE | Stable: {stable_nodes}/25 | Moves Left: {35 - count}")
+        print("\033[91m==================================================\033[0m")
+        print("       1   2   3   4   5")
+        
         for row in range(5):
-            print(row_letters[row], end="   ")
+            line_str = f" {row_letters[row]}   "
             for col in range(5):
                 node = reactor[row][col]
-                print(f"{node['type']}{node['energy']}", end="  ")
-            print()
+                line_str += f" {node['type']}{node['energy']}  "
+            print(line_str)
+
+        print("-" * 50)
+        print(f"STATUS: {status_message[:70]}")
+        print("-" * 50)
 
     def thermal_overload(row, col):
+        nonlocal status_message
         reactor[row][col]["energy"] = 0
-
-        directions = [
-            (-1, 0),
-            (1, 0),
-            (0, -1),
-            (0, 1)
-        ]
-
-        for dr, dc in directions:
-            new_row = row + dr
-            new_col = col + dc
-
-            if 0 <= new_row < 5 and 0 <= new_col < 5:
-                reactor[new_row][new_col]["energy"] += 1
-
-        print(
-            f"\033[91mTHERMAL OVERLOAD "
-            f"at {row_letters[row]}{col+1}\033[0m"
-        )
+        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nr, nc = row + dr, col + dc
+            if 0 <= nr < 5 and 0 <= nc < 5:
+                reactor[nr][nc]["energy"] += 1
+        status_message = f"THERMAL OVERLOAD at {row_letters[row]}{col+1}"
 
     def electric_overload(row, col):
+        nonlocal status_message
         reactor[row][col]["energy"] = 0
-
-        directions = [
-            (-1, -1),
-            (-1, 1),
-            (1, -1),
-            (1, 1)
-        ]
-
-        for dr, dc in directions:
-            new_row = row + dr
-            new_col = col + dc
-
-            if 0 <= new_row < 5 and 0 <= new_col < 5:
-                reactor[new_row][new_col]["energy"] += 1
-
-        print(
-            f"\033[94mELECTRIC OVERLOAD "
-            f"at {row_letters[row]}{col+1}\033[0m"
-        )
+        for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            nr, nc = row + dr, col + dc
+            if 0 <= nr < 5 and 0 <= nc < 5:
+                reactor[nr][nc]["energy"] += 1
+        status_message = f"ELECTRIC OVERLOAD at {row_letters[row]}{col+1}"
 
     def reactor_stable():
-        for row in reactor:
-            for node in row:
-                if node["energy"] < 1 or node["energy"] > 5:
-                    return False
-
-        return True
+        return all(1 <= node["energy"] <= 5 for row in reactor for node in row)
 
     def find_overload():
-        overload = []
-
-        for row in range(5):
-            for col in range(5):
-                if reactor[row][col]["energy"] >= 10:
-                    overload.append((row, col))
-
-        return overload
+        return [(r, c) for r in range(5) for c in range(5) if reactor[r][c]["energy"] >= 10]
 
     def resolve_reactor():
         overload = find_overload()
         safety_breakout = 0
-
         while overload and safety_breakout < 100:
             row, col = overload.pop(0)
-            node_type = reactor[row][col]["type"]
-
-            if node_type == "T":
+            if reactor[row][col]["type"] == "T":
                 thermal_overload(row, col)
             else:
                 electric_overload(row, col)
-
             overload = find_overload()
             safety_breakout += 1
 
     def hint_system():
-        stable_nodes = 0
-
-        for row in reactor:
-            for node in row:
-                if 1 <= node["energy"] <= 5:
-                    stable_nodes += 1
-
+        stable_nodes = sum(1 for row in reactor for node in row if 1 <= node["energy"] <= 5)
         unstable_count = 25 - stable_nodes
 
         if unstable_count == 0:
-            print("\nEngineering Note:")
-            print("All reactor systems stable.")
-            return
-
+            return "All reactor systems stable."
         if unstable_count > 15:
-            print(
-                "\nEngineering Note:\n"
-                "Many systems remain unstable.\n"
-                "Focus on reducing extremely high\n"
-                "or extremely low energy values first."
-            )
-            return
-
+            return "Focus on reducing extremely high or extremely low energy values first."
         if unstable_count > 5:
-            print(
-                "\nEngineering Note:\n"
-                "Remember:\n"
-                "Thermal nodes affect vertical and horizontal neighbours.\n"
-                "Electric nodes affect diagonal neighbours."
-            )
-            return
+            return "Thermal = orthogonal neighbors | Electric = diagonals."
 
-        for row in range(5):
-            for col in range(5):
-                energy = reactor[row][col]["energy"]
-
+        for r in range(5):
+            for c in range(5):
+                energy = reactor[r][c]["energy"]
                 if energy < 1 or energy > 5:
-                    print(
-                        f"\nEngineering Note:\n"
-                        f"Node {row_letters[row]}{col+1} "
-                        f"remains unstable.\n"
-                        f"Current Energy = {energy}"
-                    )
-                    return
+                    return f"Node {row_letters[r]}{c+1} unstable (Energy={energy})."
+        return "Analyze subsystem interactions carefully."
 
     while True:
-        print_grid()
+        print_grid(status_message)
 
         node_charge = (
-            input("\nEnter node: ")
-            .strip()
-            .replace(" ", "")
-            .upper()
+            input("\nEnter node (A1-E5): ").strip().replace(" ", "").upper()
         )
 
         if node_charge == "QUIT":
+            clear_screen()
             print("\nMission Aborted.")
-            break
+            print("Chest 2 code: A_J4")
+            return False
 
         if node_charge == "HINT":
-            hint_system()
+            status_message = hint_system()
             continue
 
         if len(node_charge) != 2:
-            print("Invalid input. Use A1-E5.")
+            status_message = "Invalid input. Use A1-E5."
             continue
 
         letter = node_charge[0]
         number = node_charge[1]
 
-        if (
-            letter not in row_letters
-            or not number.isdigit()
-            or not (1 <= int(number) <= 5)
-        ):
-            print("Invalid input. Use A1-E5.")
+        if letter not in row_letters or not number.isdigit() or not (1 <= int(number) <= 5):
+            status_message = "Invalid input. Use A1-E5."
             continue
 
         target_row = row_letters.index(letter)
         target_col = int(number) - 1
 
         reactor[target_row][target_col]["energy"] += 1
-
-        print(f"\nNode {letter}{number} charged.")
+        status_message = f"Node {letter}{number} charged."
 
         resolve_reactor()
         count += 1
 
-        stable_nodes = 0
-
-        for row in reactor:
-            for node in row:
-                if 1 <= node["energy"] <= 5:
-                    stable_nodes += 1
-
-        print(f"\nStable Nodes: {stable_nodes}/25")
-        print(f"Moves Remaining: {35-count}")
+        stable_nodes = sum(1 for row in reactor for node in row if 1 <= node["energy"] <= 5)
 
         if stable_nodes <= 5:
-            print("\033[91mWARNING: Reactor highly unstable.\033[0m")
+            status_message = f"Node {letter}{number} charged. \033[91mWARNING: Reactor highly unstable.\033[0m"
         elif stable_nodes >= 24:
-            print("Final stabilisation required.")
+            status_message = f"Node {letter}{number} charged. Final stabilisation required."
         elif stable_nodes >= 20:
-            print("Reactor fluctuations decreasing.")
+            status_message = f"Node {letter}{number} charged. Reactor fluctuations decreasing."
 
         if reactor_stable():
-            print_grid()
-
-            efficiency = ((count) / 35)
-
-            print(f"""
-\033[92m==================================================
-REACTOR STABILISED
-==================================================\033[0m
-
-Efficiency Rating: {efficiency}""")
-            print("""
-Bonus Hint:
-
-Use alphabet positions.
-
-Example:
-A = 1
-B = 2
-C = 3
-...
-Z = 26
-""")
-
-
-
+            clear_screen()
+            efficiency = count / 35
+            print("\n" + "=" * 50)
+            print("REACTOR STABILISED")
+            print("=" * 50)
+            print(f"Efficiency Rating: {efficiency}")
+            print("\nBonus Hint: Use alphabet positions (A=1, B=2, ..., Z=26).")
             print("Code Chest 2:A_J4")
-
             return True
 
         if count == 35:
-            print_grid()
-
-            print("""
-\033[91m==================================================
-MISSION FAILED
-==================================================\033[0m
-
-The reactor could not be stabilised
-within the allowed move limit.
-""")
-            print("Chest 2 code: A_J4\n Penalty:No bonus hint for you!")
-
+            clear_screen()
+            print("=" * 50)
+            print("MISSION FAILED")
+            print("=" * 50)
+            print(f"Stable nodes: {stable_nodes}/25")
+            print("The reactor could not be stabilised in 35 moves.")
+            print("Chest 2 code: A_J4")
+            print("Penalty: No bonus hint.")
             return False
+
 if __name__ == "__main__":
-     reactor_puzzle()
-
-
+    reactor_puzzle()
