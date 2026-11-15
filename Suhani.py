@@ -50,7 +50,8 @@ def show_storyline():
 "If he does not get out soon, the spaceship may fail.",
 "He must solve a sequence of puzzles",
 "to reach the control room door.",
-"Can he escape? Play to find out!"
+"Can he escape? Play to find out!",
+"* represents John | represents walls #represents chest number represents door numbers"
 ]
     for line in story_lines:
         for ch in line:
@@ -208,14 +209,6 @@ def main():
     check_terminal_size()
 
     os.system("clear")
-    print("WELCOME TO THE ESCAPE-ROOM GAME")
-    print(
-        "You are trapped in a room and you have to escape it by solving puzzles to open each chest. Each chest contain a clue for the escape.")
-    print(
-        "You are inside one room with two chests and several doors. You can only enter one and only one door leads you to freedom")
-    print("To find which door to go to, open each chest to find some clues.")
-    print("* represents the player. - represents walls. number represents door number # represents chests")
-    input("Press Enter to start the game...")
 
     show_storyline()
 
