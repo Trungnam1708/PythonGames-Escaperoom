@@ -4,10 +4,10 @@
 
 | Name | UID | Contribution |
 |--------|--------|--------|
-| Ta Nam Trung | 3036690045 | Designed and implemented the Wordle puzzle, integrated game modules, and developed the clue and notebook systems.|
+| Ta Nam Trung | 3036690045 |Designed and implemented the Wordle puzzle, integrated game modules, and developed the decoding and progression system.|
 | Aarav Sinha | 3036684436 | Designed and implemented the Reactor Core puzzle, balanced reactor mechanics, edited the trailer |
 | Ayana Oner | 3036751174 | Designed and implemented the Labyrinth puzzle, created enemy movement logic, edited the demonstration video |
-| Suhani Aggarwal | 3036684785 | Designed and implemented the Escape Room section, integrated game components, tested gameplay flow |
+| Suhani Aggarwal | 3036684785 | Designed and implemented the Escape Room section, integrated game components, and developed the clue and notebook systems. |
 
 ---
 
